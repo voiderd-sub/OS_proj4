@@ -2,14 +2,18 @@ package com.example.pj4test
 
 import android.Manifest.permission.CAMERA
 import android.Manifest.permission.RECORD_AUDIO
+//import android.R.layout
+//import android.R.raw
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import java.util.*
+
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "MainActivity"
@@ -24,6 +28,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         checkPermissions() // check permissions
+
+        SoundPlayer.initSounds(applicationContext)
     }
 
     private fun checkPermissions() {

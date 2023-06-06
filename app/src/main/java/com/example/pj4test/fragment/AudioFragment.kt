@@ -7,10 +7,11 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.example.pj4test.ProjectConfiguration
-import com.example.pj4test.audioInference.SnapClassifier
+import com.example.pj4test.SoundPlayer
+import com.example.pj4test.audioInference.SpeechClassifier
 import com.example.pj4test.databinding.FragmentAudioBinding
 
-class AudioFragment: Fragment(), SnapClassifier.DetectorListener {
+class AudioFragment: Fragment(), SpeechClassifier.DetectorListener {
     private val TAG = "AudioFragment"
 
     private var _fragmentAudioBinding: FragmentAudioBinding? = null
@@ -19,7 +20,7 @@ class AudioFragment: Fragment(), SnapClassifier.DetectorListener {
         get() = _fragmentAudioBinding!!
 
     // classifiers
-    lateinit var snapClassifier: SnapClassifier
+    lateinit var speechClassifier: SpeechClassifier
 
     // views
     lateinit var snapView: TextView
@@ -39,29 +40,31 @@ class AudioFragment: Fragment(), SnapClassifier.DetectorListener {
 
         snapView = fragmentAudioBinding.SnapView
 
-        snapClassifier = SnapClassifier()
-        snapClassifier.initialize(requireContext())
-        snapClassifier.setDetectorListener(this)
+        speechClassifier = SpeechClassifier()
+        speechClassifier.initialize(requireContext())
+        speechClassifier.setDetectorListener(this)
     }
 
     override fun onPause() {
         super.onPause()
-        snapClassifier.stopInferencing()
+        speechClassifier.stopInferencing()
     }
 
     override fun onResume() {
         super.onResume()
-        snapClassifier.startInferencing()
+        speechClassifier.startInferencing()
     }
 
     override fun onResults(score: Float) {
         activity?.runOnUiThread {
-            if (score > SnapClassifier.THRESHOLD) {
-                snapView.text = "SNAP"
+            if (score > SpeechClassifier.THRESHOLD) {
+                snapView.text = "BE QUIET"
                 snapView.setBackgroundColor(ProjectConfiguration.activeBackgroundColor)
                 snapView.setTextColor(ProjectConfiguration.activeTextColor)
+                SoundPlayer.play(SoundPlayer.DING_DONG)
+
             } else {
-                snapView.text = "NO SNAP"
+                snapView.text = "GOOD"
                 snapView.setBackgroundColor(ProjectConfiguration.idleBackgroundColor)
                 snapView.setTextColor(ProjectConfiguration.idleTextColor)
             }
