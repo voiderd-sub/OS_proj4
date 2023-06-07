@@ -35,8 +35,9 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.example.pj4test.MainActivity
 import com.example.pj4test.ProjectConfiguration
-import java.util.LinkedList
+import com.example.pj4test.SoundPlayer
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import com.example.pj4test.cameraInference.PersonClassifier
@@ -47,6 +48,10 @@ class CameraFragment : Fragment(), PersonClassifier.DetectorListener {
     private val TAG = "CameraFragment"
 
     private var _fragmentCameraBinding: FragmentCameraBinding? = null
+
+    private var detectedCount: Boolean = false
+
+    private lateinit var main: MainActivity
 
     private val fragmentCameraBinding
         get() = _fragmentCameraBinding!!
@@ -76,6 +81,8 @@ class CameraFragment : Fragment(), PersonClassifier.DetectorListener {
         savedInstanceState: Bundle?
     ): View {
         _fragmentCameraBinding = FragmentCameraBinding.inflate(inflater, container, false)
+
+        main = activity as MainActivity
 
         return fragmentCameraBinding.root
     }
@@ -182,6 +189,8 @@ class CameraFragment : Fragment(), PersonClassifier.DetectorListener {
 
         // Pass Bitmap and rotation to the object detector helper for processing and detection
         personClassifier.detect(bitmapBuffer, imageRotation)
+
+        Thread.sleep(1000)
     }
 
     // Update UI after objects have been detected. Extracts original image height/width
@@ -194,11 +203,11 @@ class CameraFragment : Fragment(), PersonClassifier.DetectorListener {
     ) {
         activity?.runOnUiThread {
             // Pass necessary information to OverlayView for drawing on the canvas
-            fragmentCameraBinding.overlay.setResults(
-                results ?: LinkedList<Detection>(),
-                imageHeight,
-                imageWidth
-            )
+//            fragmentCameraBinding.overlay.setResults(
+//                results ?: LinkedList<Detection>(),
+//                imageHeight,
+//                imageWidth
+//            )
             
             // find at least one bounding box of the person
             val isPersonDetected: Boolean = results!!.find { it.categories[0].label == "person" } != null
@@ -206,12 +215,17 @@ class CameraFragment : Fragment(), PersonClassifier.DetectorListener {
             // change UI according to the result
             if (isPersonDetected) {
                 personView.text = "PERSON"
-                personView.setBackgroundColor(ProjectConfiguration.activeBackgroundColor)
-                personView.setTextColor(ProjectConfiguration.activeTextColor)
-            } else {
-                personView.text = "NO PERSON"
                 personView.setBackgroundColor(ProjectConfiguration.idleBackgroundColor)
                 personView.setTextColor(ProjectConfiguration.idleTextColor)
+                main.personDetectCount += 1
+                if (main.personDetectCount == 1) {
+                    main.initializeSpeechClassifier?.invoke()
+                }
+            } else if (main.personDetectCount >= 1) {
+                personView.text = "STUDY!"
+                personView.setBackgroundColor(ProjectConfiguration.activeBackgroundColor)
+                personView.setTextColor(ProjectConfiguration.activeTextColor)
+                SoundPlayer.play(SoundPlayer.DING_DONG)
             }
 
             // Force a redraw

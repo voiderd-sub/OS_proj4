@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import com.example.pj4test.MainActivity
 import com.example.pj4test.ProjectConfiguration
 import com.example.pj4test.SoundPlayer
 import com.example.pj4test.audioInference.SpeechClassifier
@@ -20,7 +21,7 @@ class AudioFragment: Fragment(), SpeechClassifier.DetectorListener {
         get() = _fragmentAudioBinding!!
 
     // classifiers
-    lateinit var speechClassifier: SpeechClassifier
+    private var speechClassifier: SpeechClassifier? = null
 
     // views
     lateinit var snapView: TextView
@@ -40,19 +41,21 @@ class AudioFragment: Fragment(), SpeechClassifier.DetectorListener {
 
         snapView = fragmentAudioBinding.SnapView
 
-        speechClassifier = SpeechClassifier()
-        speechClassifier.initialize(requireContext())
-        speechClassifier.setDetectorListener(this)
+        (activity as MainActivity).initializeSpeechClassifier = {
+            speechClassifier = SpeechClassifier()
+            speechClassifier!!.initialize(requireContext())
+            speechClassifier!!.setDetectorListener(this)
+        }
     }
 
     override fun onPause() {
         super.onPause()
-        speechClassifier.stopInferencing()
+        speechClassifier?.stopInferencing()
     }
 
     override fun onResume() {
         super.onResume()
-        speechClassifier.startInferencing()
+        speechClassifier?.startInferencing()
     }
 
     override fun onResults(score: Float) {
@@ -64,7 +67,7 @@ class AudioFragment: Fragment(), SpeechClassifier.DetectorListener {
                 SoundPlayer.play(SoundPlayer.DING_DONG)
 
             } else {
-                snapView.text = "GOOD"
+                snapView.text = "KEEP BEING QUIET"
                 snapView.setBackgroundColor(ProjectConfiguration.idleBackgroundColor)
                 snapView.setTextColor(ProjectConfiguration.idleTextColor)
             }
