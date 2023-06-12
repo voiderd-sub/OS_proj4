@@ -18,13 +18,17 @@ package com.example.pj4test.fragment
 import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.graphics.Bitmap
+import android.graphics.SurfaceTexture
+import android.hardware.camera2.CaptureRequest
 import android.os.Bundle
 import android.util.Log
+import android.util.Range
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
+import androidx.camera.camera2.interop.Camera2Interop
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
@@ -138,16 +142,17 @@ class CameraFragment : Fragment(), PersonClassifier.DetectorListener {
                 .build()
         // Attach the viewfinder's surface provider to preview use case
         preview?.setSurfaceProvider(fragmentCameraBinding.viewFinder.surfaceProvider)
+//          preview?.setSurfaceProvider(null)
 
 
         // ImageAnalysis. Using RGBA 8888 to match how our models work
-        imageAnalyzer =
-            ImageAnalysis.Builder()
+
+        val builder = ImageAnalysis.Builder()
                 .setTargetAspectRatio(AspectRatio.RATIO_4_3)
                 .setTargetRotation(fragmentCameraBinding.viewFinder.display.rotation)
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .setOutputImageFormat(OUTPUT_IMAGE_FORMAT_RGBA_8888)
-                .build()
+        imageAnalyzer = builder.build()
         // The analyzer can then be assigned to the instance
         imageAnalyzer!!.setAnalyzer(cameraExecutor) { image -> detectObjects(image) }
 
@@ -163,6 +168,7 @@ class CameraFragment : Fragment(), PersonClassifier.DetectorListener {
                 preview,
                 imageAnalyzer
             )
+            preview?.setSurfaceProvider(null)
         } catch (exc: Exception) {
             Log.e(TAG, "Use case binding failed", exc)
         }
@@ -189,8 +195,6 @@ class CameraFragment : Fragment(), PersonClassifier.DetectorListener {
 
         // Pass Bitmap and rotation to the object detector helper for processing and detection
         personClassifier.detect(bitmapBuffer, imageRotation)
-
-        Thread.sleep(1000)
     }
 
     // Update UI after objects have been detected. Extracts original image height/width
@@ -221,6 +225,7 @@ class CameraFragment : Fragment(), PersonClassifier.DetectorListener {
                 if (main.personDetectCount == 1) {
                     main.initializeSpeechClassifier?.invoke()
                 }
+//                preview?.setSurfaceProvider(null)
             } else if (main.personDetectCount >= 1) {
                 personView.text = "STUDY!"
                 personView.setBackgroundColor(ProjectConfiguration.activeBackgroundColor)
@@ -231,6 +236,8 @@ class CameraFragment : Fragment(), PersonClassifier.DetectorListener {
             // Force a redraw
             fragmentCameraBinding.overlay.invalidate()
         }
+
+        Thread.sleep(500)
     }
 
     override fun onObjectDetectionError(error: String) {

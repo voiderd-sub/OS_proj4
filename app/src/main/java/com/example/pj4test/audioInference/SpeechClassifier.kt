@@ -7,11 +7,22 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import org.tensorflow.lite.support.audio.TensorAudio
 import org.tensorflow.lite.task.audio.classifier.AudioClassifier
+import java.lang.Float.max
 import java.util.*
 import kotlin.concurrent.scheduleAtFixedRate
 
 
 class SpeechClassifier {
+    val LabelList = arrayOf(
+        "Speech",
+        "Conversation",
+        "Child speech, kid speaking",
+        "Narration, monologue",
+        "Speech synthesizer",
+        "Yell",
+        "Whispering",
+        "Snoring")
+
     // Libraries for audio classification
     lateinit var classifier: AudioClassifier
     lateinit var recorder: AudioRecord
@@ -99,7 +110,11 @@ class SpeechClassifier {
         val output = classifier.classify(tensor)
         Log.d(TAG, output.toString())
 
-        return output[0].categories.find { it.label == "Speech" }!!.score
+        var score = 0.0f
+        for (label: String in LabelList) {
+            score = max(score, output[0].categories.find { it.label == label }!!.score)
+        }
+        return score
     }
 
     fun startInferencing() {
@@ -149,7 +164,7 @@ class SpeechClassifier {
     companion object {
         const val TAG = "HornClassifier"
 
-        const val REFRESH_INTERVAL_MS = 1000L
+        const val REFRESH_INTERVAL_MS = 500L
         const val YAMNET_MODEL = "yamnet_classification.tflite"
 
         const val THRESHOLD = 0.3f

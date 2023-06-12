@@ -5,7 +5,7 @@ import android.media.AudioAttributes
 import android.media.SoundPool
 
 object SoundPlayer {
-    const val DING_DONG = R.raw.sound_dingdong
+    var DING_DONG = R.raw.sound_dingdong
 
     private var soundPool: SoundPool? = null
     private var soundPoolMap: HashMap<Int, Int>? = null
